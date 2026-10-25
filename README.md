@@ -1,6 +1,6 @@
 # Supply Chain Intelligence Mini-Platform
 
-[![CI](https://github.com/OWNER/REPO/actions/workflows/ci.yml/badge.svg)](https://github.com/OWNER/REPO/actions/workflows/ci.yml)
+[![CI](https://github.com/MAHArishbah/SCI_MiniPlatfrom/actions/workflows/ci.yml/badge.svg)](https://github.com/MAHArishbah/SCI_MiniPlatfrom/actions/workflows/ci.yml)
 
 A thin, end-to-end slice of a supply-chain intelligence platform: standalone data-quality checks on raw
 shipping data, a layered DuckDB data product, a booking-time delay-risk model, a FastAPI service, and a
@@ -13,7 +13,7 @@ Claude-powered assistant that answers questions through tool calls.
 ## 1. Getting started
 
 ```bash
-git clone <this-repo> && cd <this-repo>
+git clone https://github.com/MAHArishbah/SCI_MiniPlatfrom.git && cd SCI_MiniPlatfrom
 docker compose up --build
 ```
 
@@ -331,7 +331,7 @@ reverting that commit; `model_version` in every prediction response confirms whi
 
 ## 6. CI/CD
 
-**Option A, implemented:** `.github/workflows/ci.yml`. Replace `OWNER/REPO` in the badge after pushing.
+**Option A, implemented:** `.github/workflows/ci.yml`.
 
 - **lint-and-unit:** install pinned dependencies, run `ruff check` and `ruff format --check`, run the standalone DQ check on the raw CSVs, run the 125 unit tests.
 - **docker-integration** (only if the first job passes): build the image, `docker compose up --wait` (blocks until the container healthcheck passes), run the integration tests over real HTTP, dump service logs on failure, always tear down.
