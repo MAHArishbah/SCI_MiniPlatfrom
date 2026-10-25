@@ -1,0 +1,102 @@
+{
+  "model_name": "delay_risk_logreg",
+  "model_version": "20261025-5692fe7e8522",
+  "trained_at": "2026-10-25T09:41:30.986829+00:00",
+  "sklearn_version": "1.6.0",
+  "target": "actual_arrival - planned_arrival > 24 hours",
+  "prediction_time": "booking",
+  "features": [
+    "origin_port",
+    "destination_port",
+    "origin_region",
+    "destination_region",
+    "cargo_type",
+    "origin_congestion",
+    "destination_congestion",
+    "booking_lead_days",
+    "planned_transit_days",
+    "departure_month_sin",
+    "departure_month_cos",
+    "departure_dow",
+    "container_count",
+    "log_weight_tons"
+  ],
+  "threshold": 0.5,
+  "split": {
+    "method": "time-based on booking_date (no shuffling)",
+    "train_rows": 3651,
+    "test_rows": 913,
+    "train_window": [
+      "2024-06-01 07:00:00",
+      "2025-07-10 05:00:00"
+    ],
+    "test_window": [
+      "2025-07-10 08:00:00",
+      "2025-10-14 19:00:00"
+    ],
+    "train_positive_rate": 0.4045,
+    "test_positive_rate": 0.4042
+  },
+  "metrics_test": {
+    "baseline_prior": {
+      "roc_auc": 0.5,
+      "pr_auc": 0.4042,
+      "precision": 0.0,
+      "recall": 0.0,
+      "f1": 0.0,
+      "brier": 0.2408,
+      "threshold": 0.5,
+      "confusion_matrix": {
+        "tn": 544,
+        "fp": 0,
+        "fn": 369,
+        "tp": 0
+      }
+    },
+    "logistic_regression": {
+      "roc_auc": 0.5108,
+      "pr_auc": 0.4175,
+      "precision": 0.3983,
+      "recall": 0.3713,
+      "f1": 0.3843,
+      "brier": 0.2498,
+      "threshold": 0.5,
+      "confusion_matrix": {
+        "tn": 337,
+        "fp": 207,
+        "fn": 232,
+        "tp": 137
+      },
+      "roc_auc_95ci": [
+        0.4714,
+        0.5472
+      ],
+      "train_timeseries_cv_auc": [
+        0.5124,
+        0.5092,
+        0.4727,
+        0.4993,
+        0.4574
+      ]
+    },
+    "gradient_boosting_comparison": {
+      "roc_auc": 0.5206,
+      "pr_auc": 0.426,
+      "precision": 0.4432,
+      "recall": 0.1057,
+      "f1": 0.1707,
+      "brier": 0.2444,
+      "threshold": 0.5,
+      "confusion_matrix": {
+        "tn": 495,
+        "fp": 49,
+        "fn": 330,
+        "tp": 39
+      }
+    }
+  },
+  "leakage_reference": {
+    "description": "Same model plus departure_delay_hours (post-booking). Never served.",
+    "roc_auc": 0.9745
+  }
+}

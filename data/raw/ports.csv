@@ -1,0 +1,26 @@
+port_code,port_name,country,region,timezone,avg_congestion_score
+SGSIN,Singapore,Singapore,APAC,UTC+8,0.72
+CNSHA,Shanghai,China,APAC,UTC+8,0.85
+CNSZX,Shenzhen,China,APAC,UTC+8,0.78
+CNNGB,Ningbo,China,APAC,UTC+8,0.7
+HKHKG,Hong Kong,Hong Kong,APAC,UTC+8,0.65
+KRPUS,Busan,South Korea,APAC,UTC+9,0.6
+JPYOK,Yokohama,Japan,APAC,UTC+9,0.55
+INNSA,Nhava Sheva,India,APAC,UTC+5:30,0.75
+INMUN,Mundra,India,APAC,UTC+5:30,0.68
+AEDXB,Jebel Ali,UAE,MEA,UTC+4,0.62
+NLRTM,Rotterdam,Netherlands,EUR,UTC+1,0.8
+DEHAM,Hamburg,Germany,EUR,UTC+1,0.72
+BEANR,Antwerp,,EUR,UTC+1,0.7
+GBFXT,Felixstowe,UK,EUR,UTC+0,0.66
+ESVLC,Valencia,Spain,EUR,UTC+1,0.58
+USLAX,Los Angeles,USA,AMER,UTC-8,0.82
+USLGB,Long Beach,USA,AMER,UTC-8,0.8
+USNYC,New York,USA,AMER,UTC-5,0.68
+USSAV,Savannah,USA,AMER,UTC-5,0.6
+BRSSZ,Santos,Brazil,AMER,UTC-3,0.72
+ZADUR,Durban,South Africa,MEA,UTC+2,0.55
+MYPKG,Port Klang,Malaysia,APAC,UTC+8,0.67
+THBKK,Laem Chabang,Thailand,APAC,UTC+7,0.6
+PKKAR,Karachi,Pakistan,APAC,UTC+5,0.73
+EGPSD,Port Said,Egypt,MEA,UTC+2,0.68

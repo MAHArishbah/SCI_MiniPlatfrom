@@ -1,0 +1,54 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  lint-and-unit:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+          cache-dependency-path: requirements-dev.txt
+      - name: Install
+        run: pip install -r requirements-dev.txt
+      - name: Lint
+        run: |
+          ruff check .
+          ruff format --check .
+      - name: Standalone DQ check on raw CSVs
+        run: python dq_check.py --input data/raw --output /tmp/dq_report.json
+      - name: Unit tests
+        run: pytest tests/unit -q
+
+  docker-integration:
+    needs: lint-and-unit
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+          cache-dependency-path: requirements-dev.txt
+      - name: Install test deps
+        run: pip install -r requirements-dev.txt
+      - name: Build image and start the stack
+        run: docker compose up -d --build --wait --wait-timeout 180
+        env:
+          GIT_SHA: ${{ github.sha }}
+      - name: Integration tests (real HTTP against the container)
+        run: pytest tests/integration -q -m integration
+        env:
+          SCI_BASE_URL: http://localhost:8000
+      - name: Service logs on failure
+        if: failure()
+        run: docker compose logs api
+      - name: Tear down
+        if: always()
+        run: docker compose down -v

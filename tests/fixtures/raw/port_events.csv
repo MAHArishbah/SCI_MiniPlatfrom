@@ -1,0 +1,7 @@
+event_id,event_timestamp,port_code,vessel_id,event_type,delay_minutes,notes
+EVT-000001,2025-01-08 01:00:00,CNSHA,VSL-0001,DEPARTURE,0,Normal operations
+EVT-000002,2025-01-09 01:00:00,NLRTM,VSL-0001,ARRIVAL,30,Weather delay – fog
+EVT-000002,2025-01-10 02:00:00,CNSHA,VSL-0002,BERTHED,0,
+EVT-000003,2025-01-11 03:00:00,NLRTM,VSL-9999,ARRIVAL,10,Port strike affecting berth 4
+EVT-000004,2025-01-12 04:00:00,BEANR,VSL-0002,,15,Crane maintenance window
+EVT-000005,2025-01-13 05:00:00,INNSA,VSL-0001,DELAYED,0,Labour shortage reported

@@ -1,0 +1,5 @@
+port_code,port_name,country,region,timezone,avg_congestion_score
+CNSHA,Shanghai,China,APAC,UTC+8,0.85
+NLRTM,Rotterdam,Netherlands,EUR,UTC+1,0.80
+BEANR,Antwerp,,EUR,UTC+1,0.70
+INNSA,Nhava Sheva,India,APAC,UTC+5:30,0.75

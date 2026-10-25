@@ -1,0 +1,558 @@
+{
+  "report_version": "1.0",
+  "generated_at": "2026-10-25T19:33:35.479915+00:00",
+  "tool_version": "0.1.0",
+  "inputs": {
+    "ports": {
+      "file": "ports.csv",
+      "rows": 25,
+      "sha256": "56b77716aa5445c4a3658bddaa5c141031f678cabab3d98f936cffa89bc30ac7"
+    },
+    "shipments": {
+      "file": "shipments.csv",
+      "rows": 5028,
+      "sha256": "d8dd6dbc5d5ee8c3359cbb7a1df6af846dbcc7a2894c75bf84aca4ecbb7ea021"
+    },
+    "port_events": {
+      "file": "port_events.csv",
+      "rows": 25000,
+      "sha256": "86258f32fef1008a19c59aac9fcb7b688e645f27f6d538012a73c3591d71b699"
+    }
+  },
+  "summary": {
+    "checks_run": 32,
+    "checks_failed": 18,
+    "failed_by_severity": {
+      "critical": 3,
+      "warning": 13,
+      "info": 2
+    },
+    "assumptions": [
+      "All timestamps are timezone-naive and treated as UTC.",
+      "Severity: critical = record unusable for its core purpose; warning = fixable/flaggable; info = observation.",
+      "rows_affected counts rows in the raw file; one row can fail several checks."
+    ]
+  },
+  "checks": [
+    {
+      "check": "shipments.duplicate_rows_exact",
+      "table": "shipments",
+      "status": "fail",
+      "severity": "warning",
+      "rows_affected": 8,
+      "total_rows": 5028,
+      "pct_of_total": 0.159,
+      "description": "Row is an exact copy of an earlier row (same shipment_id and all fields).",
+      "detection": "DataFrame.duplicated(keep='first') over all columns.",
+      "recommended_action": "drop: keep the first copy, drop the rest (no information lost).",
+      "sample_keys": [
+        "SHP-03324",
+        "SHP-00077",
+        "SHP-02142",
+        "SHP-02290",
+        "SHP-02978"
+      ]
+    },
+    {
+      "check": "shipments.duplicate_id_conflicting",
+      "table": "shipments",
+      "status": "fail",
+      "severity": "critical",
+      "rows_affected": 20,
+      "total_rows": 5028,
+      "pct_of_total": 0.398,
+      "description": "shipment_id repeats with different field values (e.g. weight or cargo differs).",
+      "detection": "shipment_id duplicated but full row not duplicated.",
+      "recommended_action": "fix: keep the most complete record per id (fewest blanks, tie -> first seen), drop the rest, flag the kept row.",
+      "sample_keys": [
+        "SHP-03647",
+        "SHP-03435",
+        "SHP-03280",
+        "SHP-03737",
+        "SHP-00275"
+      ]
+    },
+    {
+      "check": "shipments.unknown_port_code",
+      "table": "shipments",
+      "status": "fail",
+      "severity": "critical",
+      "rows_affected": 95,
+      "total_rows": 5028,
+      "pct_of_total": 1.889,
+      "description": "origin_port or destination_port not in the ports reference (e.g. XXTST, ZZZZZ, UNKNW placeholders).",
+      "detection": "Referential integrity: port code NOT IN ports.port_code.",
+      "recommended_action": "quarantine: route metrics and the model cannot use a shipment without real ports.",
+      "sample_keys": [
+        "SHP-03125",
+        "SHP-02763",
+        "SHP-00679",
+        "SHP-02125",
+        "SHP-01100"
+      ]
+    },
+    {
+      "check": "shipments.cargo_type_non_canonical",
+      "table": "shipments",
+      "status": "fail",
+      "severity": "warning",
+      "rows_affected": 261,
+      "total_rows": 5028,
+      "pct_of_total": 5.191,
+      "description": "cargo_type differs from the canonical label only by case/whitespace (e.g. 'FURNITURE', ' Chemicals').",
+      "detection": "Raw value != whitespace-collapsed, case-insensitive match to the canonical list.",
+      "recommended_action": "fix: normalize to the canonical label.",
+      "sample_keys": [
+        "SHP-04150",
+        "SHP-00564",
+        "SHP-00957",
+        "SHP-03872",
+        "SHP-00365"
+      ]
+    },
+    {
+      "check": "shipments.cargo_type_unrecognized",
+      "table": "shipments",
+      "status": "pass",
+      "severity": "warning",
+      "rows_affected": 0,
+      "total_rows": 5028,
+      "pct_of_total": 0.0,
+      "description": "cargo_type does not match any canonical category even after normalization.",
+      "detection": "Normalized value NOT IN canonical cargo list.",
+      "recommended_action": "flag: keep raw value, review mapping.",
+      "sample_keys": []
+    },
+    {
+      "check": "shipments.cargo_type_missing",
+      "table": "shipments",
+      "status": "fail",
+      "severity": "warning",
+      "rows_affected": 15,
+      "total_rows": 5028,
+      "pct_of_total": 0.298,
+      "description": "cargo_type is blank.",
+      "detection": "Blank / null-token check.",
+      "recommended_action": "fix: set to 'Unknown' so the record stays usable; model treats it as its own category.",
+      "sample_keys": [
+        "SHP-03647",
+        "SHP-00275",
+        "SHP-03887",
+        "SHP-03280",
+        "SHP-04906"
+      ]
+    },
+    {
+      "check": "shipments.weight_tons_missing",
+      "table": "shipments",
+      "status": "fail",
+      "severity": "warning",
+      "rows_affected": 73,
+      "total_rows": 5028,
+      "pct_of_total": 1.452,
+      "description": "weight_tons is blank.",
+      "detection": "Blank / null-token check.",
+      "recommended_action": "flag: keep NULL (no defensible fill value); the model imputes the training median.",
+      "sample_keys": [
+        "SHP-01495",
+        "SHP-03784",
+        "SHP-03225",
+        "SHP-04081",
+        "SHP-04525"
+      ]
+    },
+    {
+      "check": "shipments.weight_tons_negative",
+      "table": "shipments",
+      "status": "fail",
+      "severity": "warning",
+      "rows_affected": 36,
+      "total_rows": 5028,
+      "pct_of_total": 0.716,
+      "description": "weight_tons < 0, which is physically impossible.",
+      "detection": "Numeric range check: weight_tons < 0.",
+      "recommended_action": "fix: set to NULL and flag (sign-flip is a guess we should not make silently).",
+      "sample_keys": [
+        "SHP-00617",
+        "SHP-02149",
+        "SHP-03447",
+        "SHP-03198",
+        "SHP-02112"
+      ]
+    },
+    {
+      "check": "shipments.container_count_zero",
+      "table": "shipments",
+      "status": "fail",
+      "severity": "warning",
+      "rows_affected": 23,
+      "total_rows": 5028,
+      "pct_of_total": 0.457,
+      "description": "container_count is 0 (or negative) for a booked shipment.",
+      "detection": "Numeric range check: container_count <= 0.",
+      "recommended_action": "fix: set to NULL and flag.",
+      "sample_keys": [
+        "SHP-02291",
+        "SHP-04667",
+        "SHP-00868",
+        "SHP-03058",
+        "SHP-00766"
+      ]
+    },
+    {
+      "check": "shipments.container_count_outlier",
+      "table": "shipments",
+      "status": "fail",
+      "severity": "warning",
+      "rows_affected": 17,
+      "total_rows": 5028,
+      "pct_of_total": 0.338,
+      "description": "container_count above the robust upper fence (94); values here are ~15-25x the normal max.",
+      "detection": "IQR fence: count > Q3 + 3.0 * IQR on positive counts.",
+      "recommended_action": "fix: set to NULL and flag (likely unit/keying error, e.g. TEU vs containers or an extra digit).",
+      "sample_keys": [
+        "SHP-04251",
+        "SHP-03990",
+        "SHP-04673",
+        "SHP-03679",
+        "SHP-04607"
+      ]
+    },
+    {
+      "check": "shipments.status_non_canonical",
+      "table": "shipments",
+      "status": "fail",
+      "severity": "warning",
+      "rows_affected": 146,
+      "total_rows": 5028,
+      "pct_of_total": 2.904,
+      "description": "status outside {DELIVERED, DELAYED, CANCELLED}: 'COMPLETED', 'Complete', 'delivered', 'N/A', blank.",
+      "detection": "Raw value NOT IN canonical status set.",
+      "recommended_action": "fix: map completion variants to DELIVERED, blanks/'N/A' to UNKNOWN.",
+      "sample_keys": [
+        "SHP-04428",
+        "SHP-04491",
+        "SHP-03880",
+        "SHP-00906",
+        "SHP-00477"
+      ]
+    },
+    {
+      "check": "shipments.missing_actuals_non_cancelled",
+      "table": "shipments",
+      "status": "fail",
+      "severity": "critical",
+      "rows_affected": 146,
+      "total_rows": 5028,
+      "pct_of_total": 2.904,
+      "description": "Shipment is not CANCELLED but has no actual departure/arrival, so its delay cannot be computed.",
+      "detection": "status != CANCELLED AND (actual_departure blank OR actual_arrival blank).",
+      "recommended_action": "flag: keep the record (it is a real booking) but exclude it from delay metrics and ML labels.",
+      "sample_keys": [
+        "SHP-04428",
+        "SHP-04491",
+        "SHP-03880",
+        "SHP-00906",
+        "SHP-00477"
+      ]
+    },
+    {
+      "check": "shipments.actual_departure_before_booking",
+      "table": "shipments",
+      "status": "fail",
+      "severity": "warning",
+      "rows_affected": 39,
+      "total_rows": 5028,
+      "pct_of_total": 0.776,
+      "description": "Vessel actually departed before the booking was made: temporally impossible.",
+      "detection": "actual_departure < booking_date.",
+      "recommended_action": "fix: set actual_departure to NULL and flag; arrival-based delay is kept.",
+      "sample_keys": [
+        "SHP-03067",
+        "SHP-02768",
+        "SHP-00765",
+        "SHP-01157",
+        "SHP-02100"
+      ]
+    },
+    {
+      "check": "shipments.unparseable_timestamp",
+      "table": "shipments",
+      "status": "pass",
+      "severity": "critical",
+      "rows_affected": 0,
+      "total_rows": 5028,
+      "pct_of_total": 0.0,
+      "description": "A non-blank timestamp that does not parse as YYYY-MM-DD HH:MM:SS.",
+      "detection": "Strict format parse of every timestamp column.",
+      "recommended_action": "quarantine if present.",
+      "sample_keys": []
+    },
+    {
+      "check": "shipments.planned_timestamp_missing",
+      "table": "shipments",
+      "status": "pass",
+      "severity": "critical",
+      "rows_affected": 0,
+      "total_rows": 5028,
+      "pct_of_total": 0.0,
+      "description": "booking_date / planned_departure / planned_arrival blank (needed for every metric and the model).",
+      "detection": "Blank check on required planning timestamps.",
+      "recommended_action": "quarantine if present.",
+      "sample_keys": []
+    },
+    {
+      "check": "shipments.planned_timeline_inconsistent",
+      "table": "shipments",
+      "status": "pass",
+      "severity": "critical",
+      "rows_affected": 0,
+      "total_rows": 5028,
+      "pct_of_total": 0.0,
+      "description": "planned_arrival <= planned_departure, or booking_date after planned_departure.",
+      "detection": "Timeline order check on planned timestamps.",
+      "recommended_action": "quarantine if present.",
+      "sample_keys": []
+    },
+    {
+      "check": "shipments.actual_arrival_before_departure",
+      "table": "shipments",
+      "status": "pass",
+      "severity": "critical",
+      "rows_affected": 0,
+      "total_rows": 5028,
+      "pct_of_total": 0.0,
+      "description": "actual_arrival <= actual_departure.",
+      "detection": "Timeline order check on actual timestamps.",
+      "recommended_action": "flag and null actuals if present.",
+      "sample_keys": []
+    },
+    {
+      "check": "shipments.origin_equals_destination",
+      "table": "shipments",
+      "status": "pass",
+      "severity": "warning",
+      "rows_affected": 0,
+      "total_rows": 5028,
+      "pct_of_total": 0.0,
+      "description": "origin_port == destination_port.",
+      "detection": "Column equality check.",
+      "recommended_action": "flag if present.",
+      "sample_keys": []
+    },
+    {
+      "check": "shipments.cancelled_with_actuals",
+      "table": "shipments",
+      "status": "pass",
+      "severity": "warning",
+      "rows_affected": 0,
+      "total_rows": 5028,
+      "pct_of_total": 0.0,
+      "description": "CANCELLED shipment that still has an actual arrival.",
+      "detection": "status == CANCELLED AND actual_arrival not blank.",
+      "recommended_action": "flag if present.",
+      "sample_keys": []
+    },
+    {
+      "check": "shipments.status_contradicts_delay",
+      "table": "shipments",
+      "status": "pass",
+      "severity": "warning",
+      "rows_affected": 0,
+      "total_rows": 5028,
+      "pct_of_total": 0.0,
+      "description": "status DELIVERED but delay > 24h, or DELAYED but delay <= 24h.",
+      "detection": "Cross-field consistency between status and computed arrival delay.",
+      "recommended_action": "flag if present (computed delay wins over the status label).",
+      "sample_keys": []
+    },
+    {
+      "check": "ports.country_missing",
+      "table": "ports",
+      "status": "fail",
+      "severity": "warning",
+      "rows_affected": 1,
+      "total_rows": 25,
+      "pct_of_total": 4.0,
+      "description": "country is blank (BEANR / Antwerp).",
+      "detection": "Blank / null-token check.",
+      "recommended_action": "fix: fill from the UN/LOCODE country prefix (BE -> Belgium).",
+      "sample_keys": [
+        "BEANR"
+      ]
+    },
+    {
+      "check": "ports.duplicate_port_code",
+      "table": "ports",
+      "status": "pass",
+      "severity": "critical",
+      "rows_affected": 0,
+      "total_rows": 25,
+      "pct_of_total": 0.0,
+      "description": "port_code appears more than once in the reference table.",
+      "detection": "port_code duplicated.",
+      "recommended_action": "quarantine duplicates if present.",
+      "sample_keys": []
+    },
+    {
+      "check": "ports.congestion_score_out_of_range",
+      "table": "ports",
+      "status": "pass",
+      "severity": "warning",
+      "rows_affected": 0,
+      "total_rows": 25,
+      "pct_of_total": 0.0,
+      "description": "avg_congestion_score missing or outside [0, 1].",
+      "detection": "Numeric range check.",
+      "recommended_action": "flag if present.",
+      "sample_keys": []
+    },
+    {
+      "check": "port_events.event_id_collision",
+      "table": "port_events",
+      "status": "fail",
+      "severity": "warning",
+      "rows_affected": 206,
+      "total_rows": 25000,
+      "pct_of_total": 0.824,
+      "description": "event_id reused by different events (different port, vessel, time). All rows sharing an id are counted.",
+      "detection": "event_id duplicated(keep=False); rows are not exact duplicates.",
+      "recommended_action": "fix: keep all rows (they are distinct events), add a deterministic surrogate key, flag.",
+      "sample_keys": [
+        "EVT-006658",
+        "EVT-008392",
+        "EVT-012052",
+        "EVT-012512",
+        "EVT-009897"
+      ]
+    },
+    {
+      "check": "port_events.duplicate_rows_exact",
+      "table": "port_events",
+      "status": "pass",
+      "severity": "warning",
+      "rows_affected": 0,
+      "total_rows": 25000,
+      "pct_of_total": 0.0,
+      "description": "Exact duplicate event rows (typical of at-least-once streaming delivery).",
+      "detection": "DataFrame.duplicated(keep='first').",
+      "recommended_action": "drop duplicates if present.",
+      "sample_keys": []
+    },
+    {
+      "check": "port_events.event_type_missing",
+      "table": "port_events",
+      "status": "fail",
+      "severity": "warning",
+      "rows_affected": 140,
+      "total_rows": 25000,
+      "pct_of_total": 0.56,
+      "description": "event_type is blank.",
+      "detection": "Blank / null-token check.",
+      "recommended_action": "fix: set to 'UNKNOWN' and keep the row (delay_minutes still usable).",
+      "sample_keys": [
+        "EVT-000127",
+        "EVT-005287",
+        "EVT-020782",
+        "EVT-012288",
+        "EVT-006843"
+      ]
+    },
+    {
+      "check": "port_events.unknown_vessel",
+      "table": "port_events",
+      "status": "fail",
+      "severity": "warning",
+      "rows_affected": 207,
+      "total_rows": 25000,
+      "pct_of_total": 0.828,
+      "description": "vessel_id not in the shipment fleet (VSL-0000 and VSL-9999 look like test/placeholder ids).",
+      "detection": "Referential integrity: vessel_id NOT IN shipments.vessel_id.",
+      "recommended_action": "quarantine: cannot be linked to any shipment.",
+      "sample_keys": [
+        "EVT-010702",
+        "EVT-006563",
+        "EVT-000753",
+        "EVT-001299",
+        "EVT-023607"
+      ]
+    },
+    {
+      "check": "port_events.unknown_port_code",
+      "table": "port_events",
+      "status": "pass",
+      "severity": "critical",
+      "rows_affected": 0,
+      "total_rows": 25000,
+      "pct_of_total": 0.0,
+      "description": "port_code not in the ports reference.",
+      "detection": "Referential integrity.",
+      "recommended_action": "quarantine if present.",
+      "sample_keys": []
+    },
+    {
+      "check": "port_events.delay_minutes_invalid",
+      "table": "port_events",
+      "status": "pass",
+      "severity": "warning",
+      "rows_affected": 0,
+      "total_rows": 25000,
+      "pct_of_total": 0.0,
+      "description": "delay_minutes missing, non-numeric or negative.",
+      "detection": "Numeric parse + range check.",
+      "recommended_action": "set to NULL and flag if present.",
+      "sample_keys": []
+    },
+    {
+      "check": "port_events.delayed_event_zero_minutes",
+      "table": "port_events",
+      "status": "fail",
+      "severity": "info",
+      "rows_affected": 12,
+      "total_rows": 25000,
+      "pct_of_total": 0.048,
+      "description": "event_type DELAYED but delay_minutes = 0 (contradictory).",
+      "detection": "Cross-field consistency check.",
+      "recommended_action": "flag only: we cannot tell which field is wrong.",
+      "sample_keys": [
+        "EVT-007902",
+        "EVT-013133",
+        "EVT-016028",
+        "EVT-018306",
+        "EVT-005273"
+      ]
+    },
+    {
+      "check": "port_events.unparseable_timestamp",
+      "table": "port_events",
+      "status": "pass",
+      "severity": "critical",
+      "rows_affected": 0,
+      "total_rows": 25000,
+      "pct_of_total": 0.0,
+      "description": "event_timestamp blank or not parseable.",
+      "detection": "Strict format parse.",
+      "recommended_action": "quarantine if present.",
+      "sample_keys": []
+    },
+    {
+      "check": "port_events.notes_missing",
+      "table": "port_events",
+      "status": "fail",
+      "severity": "info",
+      "rows_affected": 1913,
+      "total_rows": 25000,
+      "pct_of_total": 7.652,
+      "description": "Free-text notes blank. Notes are optional, so this is informational.",
+      "detection": "Blank check.",
+      "recommended_action": "keep as NULL.",
+      "sample_keys": [
+        "EVT-013014",
+        "EVT-004196",
+        "EVT-004718",
+        "EVT-000658",
+        "EVT-007497"
+      ]
+    }
+  ]
+}

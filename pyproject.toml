@@ -1,0 +1,22 @@
+[project]
+name = "sci-platform"
+version = "0.1.0"
+description = "Supply Chain Intelligence mini-platform (take-home assignment)"
+requires-python = ">=3.11"
+
+[tool.ruff]
+line-length = 120
+target-version = "py311"
+extend-exclude = ["warehouse", "artifacts", "logs"]
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "B", "UP", "W"]
+ignore = [
+    "B008",  # FastAPI Depends()/Query() defaults are the intended pattern
+    "E501",  # line length is owned by `ruff format`; long string literals are allowed
+]
+
+[tool.pytest.ini_options]
+testpaths = ["tests/unit"]
+markers = ["integration: hits a running service (needs SCI_BASE_URL or localhost:8000)"]
+filterwarnings = ["ignore::DeprecationWarning"]
